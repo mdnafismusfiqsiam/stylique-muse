@@ -1,7 +1,10 @@
+
 /* Stylique Muse contact form
- * Set WEBHOOK_URL to the published n8n production webhook before deployment.
- * Never put Resend or Meta access tokens in this file.
+ * Set WEBHOOK_URL to your n8n production webhook URL.
+ * Never put private API tokens or credentials in this file.
  */
+
+// Replace this placeholder only after the secure webhook is ready.
 const WEBHOOK_URL = "YOUR_N8N_PRODUCTION_WEBHOOK_URL";
 
 const form = document.querySelector("#contact-form");
@@ -16,14 +19,22 @@ function showStatus(message, type) {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+
   if (!form.reportValidity()) return;
 
-  if (WEBHOOK_URL === "YOUR_N8N_PRODUCTION_WEBHOOK_URL") {
-    showStatus("The contact form is designed and ready, but automated messaging has not been connected yet. Please email styliquemuse@gmail.com for now.", "error");
+  if (
+    !WEBHOOK_URL ||
+    WEBHOOK_URL === "YOUR_N8N_PRODUCTION_WEBHOOK_URL"
+  ) {
+    showStatus(
+      "Online messaging is being set up. Please email styliquemuse@gmail.com for now.",
+      "error"
+    );
     return;
   }
 
   const data = new FormData(form);
+
   const payload = {
     name: String(data.get("name") || "").trim(),
     email: String(data.get("email") || "").trim(),
@@ -33,7 +44,12 @@ form.addEventListener("submit", async (event) => {
     source: "styliquemuse-website"
   };
 
-  if (!payload.name || !payload.email || !payload.phone || !payload.message) {
+  if (
+    !payload.name ||
+    !payload.email ||
+    !payload.phone ||
+    !payload.message
+  ) {
     showStatus("Please complete all required fields.", "error");
     return;
   }
@@ -45,32 +61,56 @@ form.addEventListener("submit", async (event) => {
   try {
     const response = await fetch(WEBHOOK_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(payload)
     });
-    if (!response.ok) throw new Error("The form could not be submitted.");
-    showStatus("Thank you! Your enquiry has been submitted. Please check your inbox for confirmation.", "success");
+
+    if (!response.ok) {
+      throw new Error("The form could not be submitted.");
+    }
+
+    showStatus(
+      "Thank you! Your enquiry has been submitted. Please check your inbox for confirmation.",
+      "success"
+    );
+
     form.reset();
   } catch (error) {
-    showStatus("We couldn't send your message just now. Please email styliquemuse@gmail.com and try again later.", "error");
+    showStatus(
+      "We couldn't send your message just now. Please email styliquemuse@gmail.com and try again later.",
+      "error"
+    );
   } finally {
     submitButton.disabled = false;
     submitLabel.textContent = "Send my message";
   }
 });
 
+// Mobile navigation
 const menuToggle = document.querySelector("#menu-toggle");
 const mainNav = document.querySelector("#main-nav");
+
 menuToggle.addEventListener("click", () => {
   const isOpen = mainNav.classList.toggle("open");
+
   menuToggle.setAttribute("aria-expanded", String(isOpen));
-  menuToggle.setAttribute("aria-label", isOpen ? "Close navigation" : "Open navigation");
+  menuToggle.setAttribute(
+    "aria-label",
+    isOpen ? "Close navigation" : "Open navigation"
+  );
   menuToggle.textContent = isOpen ? "×" : "☰";
 });
-mainNav.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => {
-  mainNav.classList.remove("open");
-  menuToggle.setAttribute("aria-expanded", "false");
-  menuToggle.setAttribute("aria-label", "Open navigation");
-  menuToggle.textContent = "☰";
-}));
+
+mainNav.querySelectorAll("a").forEach((link) => {
+  link.addEventListener("click", () => {
+    mainNav.classList.remove("open");
+    menuToggle.setAttribute("aria-expanded", "false");
+    menuToggle.setAttribute("aria-label", "Open navigation");
+    menuToggle.textContent = "☰";
+  });
+});
+
+// Footer year
 document.querySelector("#year").textContent = new Date().getFullYear();
